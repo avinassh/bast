@@ -11,6 +11,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+
 func get_request_for_access_token() *http.Request {
 	app_key := os.Getenv("BAST_APP_KEY")
 	app_secret := os.Getenv("BAST_APP_SECRET")
@@ -49,6 +50,27 @@ func get_access_token() string {
 	return parsed_body.Get("access_token").String()
 }
 
+func get_my_comments() {
+	username := os.Getenv("REDDIT_USERNAME")
+	ua_string := os.Getenv("BAST_USER_AGENT_STRING")
+	url := fmt.Sprintf("https://oauth.reddit.com/user/%s/comments?sort=new", username)
+
+	access_token :=  get_access_token()
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", fmt.Sprintf("bearer %s", access_token))
+	req.Header.Set("User-Agent", ua_string)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(gjson.ParseBytes(body))
+}
+
 func main() {
-	fmt.Println(get_access_token())
+	get_my_comments()
 }
